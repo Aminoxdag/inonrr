@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معرض فيديوهات جوجو - واجهة سينمائية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0A0A0C;
+            --surface-dark: #18181B;
+            --surface-light: #27272A;
+            --text-primary: #F4F4F5;
+            --text-secondary: #A1A1AA;
+            --accent: #6366F1; /* Indigo */
+        }
+        html.light {
+            --bg-dark: #F5F5F7;
+            --surface-dark: #FFFFFF;
+            --surface-light: #EAEAEF;
+            --text-primary: #1D1D1F;
+            --text-secondary: #6E6E73;
+            --accent: #4F46E5; /* Indigo */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            /* Hide scrollbar for a more app-like feel */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* Internet Explorer 10+ */
+        }
+        body::-webkit-scrollbar {
+            display: none; /* Safari and Chrome */
+        }
+        .popup-enter-active, .popup-exit-active { transition: opacity 300ms, transform 300ms; }
+        .popup-enter-from, .popup-exit-to { opacity: 0; transform: scale(0.95); }
+        .speed-option.active { background-color: var(--accent); color: white; }
+        .skeleton-card {
+            background-color: var(--surface-dark);
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 1px solid var(--surface-light);
+        }
+        .skeleton-img {
+            height: 12rem;
+            background-color: var(--surface-light);
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse { 50% { opacity: .5; } }
+        #heroProgressBar {
+            transform-origin: right;
+            transition: transform 0.2s linear;
+        }
+    </style>
+</head>
+<body class="transition-colors duration-300">
+
+    <!-- Password Popup -->
+    <div id="passwordPopup" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-gray-900 w-full max-w-sm rounded-2xl p-8 shadow-2xl border border-gray-700">
+            <h2 class="text-2xl font-bold text-center text-white mb-2">الدخول للموقع</h2>
+            <p class="text-center text-gray-400 mb-6">الرجاء إدخال كلمة المرور للمتابعة.</p>
+            <input type="password" id="passwordInput" placeholder="كلمة المرور" class="w-full bg-gray-800 text-white placeholder-gray-500 rounded-lg px-4 py-3 mb-4 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+            <p id="passwordError" class="text-red-400 text-center mb-4 hidden">كلمة المرور غير صحيحة.</p>
+            <button onclick="checkPassword()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg shadow-indigo-900/50">
+                دخول
+            </button>
+        </div>
+    </div>
+    
+    <div id="contentWrapper" class="hidden">
+        <!-- Hero Banner -->
+        <section id="heroBanner" class="relative h-screen w-screen">
+            <video id="heroVideo" class="absolute inset-0 w-full h-full object-cover" autoplay muted playsinline></video>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+            
+            <div class="absolute top-0 left-0 p-6 z-10">
+                 <button id="heroMuteBtn" title="كتم/إلغاء كتم الصوت" class="h-12 w-12 flex items-center justify-center bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all">
+                    <svg id="hero-unmute-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                    <svg id="hero-mute-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                </button>
+            </div>
+
+            <div class="absolute bottom-0 left-0 p-6 z-10">
+                <button id="heroPlayBtn" class="px-5 py-2 flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-lg text-white font-semibold hover:bg-white/20 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    <span>تشغيل</span>
+                </button>
+            </div>
+            
+            <div class="absolute bottom-0 left-0 w-full h-1 bg-white/20 z-10">
+                <div id="heroProgressBar" class="h-full bg-white" style="transform: scaleX(0);"></div>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <div id="mainContent" class="relative z-10 bg-[var(--bg-dark)]">
+            <header id="appHeader" class="sticky top-0 z-30 py-4 px-4 sm:px-6 lg:px-8 bg-[var(--bg-dark)]/80 backdrop-blur-xl transition-all duration-500 border-b border-[var(--surface-light)] opacity-0 -translate-y-full">
+                <div class="max-w-7xl mx-auto flex justify-between items-center gap-4">
+                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Jojo Gallery</h1>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="playRandomVideo()" title="تشغيل فيديو عشوائي" class="h-10 px-3 flex items-center gap-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-300 hover:text-white transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+                            <span class="hidden sm:inline">عشوائي</span>
+                        </button>
+                        <button onclick="openInfoPopup()" title="معلومات" class="h-10 w-10 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        </button>
+                        <button onclick="toggleTheme()" title="تغيير المظهر" class="h-10 w-10 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-all">
+                            <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                            <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+                <div class="mb-8">
+                    <div class="relative">
+                        <input type="text" id="filterInput" placeholder="ابحث عن فيديو..." class="w-full bg-[var(--surface-dark)] border border-[var(--surface-light)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] rounded-lg pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition">
+                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-[var(--text-secondary)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="videoContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+                <div id="loadingIndicator" class="text-center py-12"></div>
+                <div class="text-center py-12">
+                    <button id="loadMoreButton" onclick="loadMoreVideos()" class="bg-[var(--surface-dark)] hover:bg-[var(--surface-light)] text-[var(--text-primary)] font-semibold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 border border-[var(--surface-light)] hidden">
+                        تحميل المزيد
+                    </button>
+                </div>
+            </main>
+
+            <footer class="text-center py-10 mt-12 border-t border-[var(--surface-dark)]">
+                <p class="text-[var(--text-secondary)]">تم التطوير بـ ❤️ بواسطة <a href="https://twitter.com/vvrlox" target="_blank" class="text-[var(--accent)] hover:underline font-semibold">@vvrlox</a></p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Video Player Popup -->
+    <div id="videoPopup" class="fixed inset-0 bg-black/80 backdrop-blur-xl flex items-center justify-center z-40 p-4 opacity-0 invisible transition-opacity duration-300">
+        <div id="videoPopupContent" class="w-full max-w-4xl bg-[var(--surface-dark)] rounded-2xl shadow-2xl border border-[var(--surface-light)] flex flex-col overflow-hidden popup-enter-from">
+            <div id="videoContainerPopup" class="w-full aspect-video bg-black relative rounded-t-2xl"></div>
+            <div class="p-4 border-t border-[var(--surface-light)]">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                     <div class="flex items-center gap-2">
+                        <button id="shareButton" onclick="shareVideo()" title="مشاركة الرابط" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
+                        <button id="loopButton" onclick="toggleLoop()" title="إعادة تشغيل" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h12"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H5"/></svg></button>
+                        <button onclick="closePopup()" title="إغلاق (Esc)" class="p-2 rounded-full bg-red-600/20 hover:bg-red-600/40 text-red-400 transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+                    </div>
+                    <div class="flex items-center gap-2 sm:gap-4">
+                        <div class="relative group">
+                            <button class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 transition-all flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg><span id="speedButtonText">1x</span></button>
+                            <div class="absolute bottom-full mb-2 right-1/2 translate-x-1/2 w-40 bg-[var(--surface-light)] border border-white/10 rounded-lg shadow-xl p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10"><button class="speed-option w-full text-left px-3 py-2 rounded-md hover:bg-white/5" data-speed="0.5" onclick="setPlaybackSpeed(0.5)">0.5x</button><button class="speed-option w-full text-left px-3 py-2 rounded-md hover:bg-white/5 active" data-speed="1" onclick="setPlaybackSpeed(1)">1x (Normal)</button><button class="speed-option w-full text-left px-3 py-2 rounded-md hover:bg-white/5" data-speed="1.5" onclick="setPlaybackSpeed(1.5)">1.5x</button><button class="speed-option w-full text-left px-3 py-2 rounded-md hover:bg-white/5" data-speed="2" onclick="setPlaybackSpeed(2)">2x</button></div>
+                        </div>
+                        <div class="relative group">
+                            <button class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 transition-all flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><span>فلاتر</span></button>
+                            <div id="filterOptions" class="absolute bottom-full mb-2 right-1/2 translate-x-1/2 w-72 bg-[var(--surface-light)] border border-white/10 rounded-lg shadow-xl p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 space-y-4 z-10"><button class="w-full mt-2 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white transition" onclick="resetFilters()">إعادة تعيين</button></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Popup -->
+    <div id="infoPopup" class="fixed inset-0 bg-black/80 backdrop-blur-xl flex items-center justify-center z-50 p-4 opacity-0 invisible transition-opacity duration-300">
+        <div class="bg-[var(--surface-dark)] w-full max-w-md rounded-2xl p-8 shadow-2xl border border-[var(--surface-light)] text-center popup-enter-from">
+            <h2 class="text-2xl font-bold text-white mb-4">مين جوجو؟</h2>
+            <p class="text-[var(--text-secondary)] mb-2">🍒 جوجو عندها اجمل واكثر ديد بيرفكت بتويتر</p>
+            <p class="text-[var(--text-secondary)] mb-6">@inonrr | @sinuw8 :حساباتها</p>
+            <p class="text-xs text-gray-500">Created with ❤️ by <a href="https://twitter.com/vvrlox" target="_blank" class="text-[var(--accent)] hover:underline font-semibold">@vvrlox</a></p>
+            <button onclick="closeInfoPopup()" class="mt-6 w-full bg-[var(--accent)]/90 hover:bg-[var(--accent)] text-white font-bold py-3 px-4 rounded-lg transition-all">إغلاق</button>
+        </div>
+    </div>
+
+    <!-- Custom Notification -->
+    <div id="notification" class="fixed top-5 right-5 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 translate-y-10 transition-all duration-300 z-50">
+        <p id="notificationMessage"></p>
+    </div>
+
+    <script>
+    // --- STATE & CONFIG ---
+    let allVideos = [];
+    let heroPlaylist = [];
+    let currentHeroIndex = 0;
+    let loadedVideosCount = 0;
+    const videosPerLoad = 12;
+    let currentSpeed = 1;
+    const defaultFilterSettings = { brightness: 100, contrast: 100, saturate: 100, 'hue-rotate': 0, blur: 0 };
+    let filterSettings = { ...defaultFilterSettings };
+    const videosUrl = "https://raw.githubusercontent.com/Aminoxdag/catbox-inonrr/refs/heads/main/inonrr.txt";
+
+    // --- DOM ELEMENTS ---
+    const getEl = (id) => document.getElementById(id);
+    const passwordPopup = getEl('passwordPopup');
+    const passwordInput = getEl('passwordInput');
+    const passwordError = getEl('passwordError');
+    const contentWrapper = getEl('contentWrapper');
+    const heroBanner = getEl('heroBanner');
+    const heroVideo = getEl('heroVideo');
+    const heroMuteBtn = getEl('heroMuteBtn');
+    const heroPlayBtn = getEl('heroPlayBtn');
+    const heroProgressBar = getEl('heroProgressBar');
+    const mainContent = getEl('mainContent');
+    const filterInput = getEl('filterInput');
+    const videoContainer = getEl('videoContainer');
+    const loadingIndicator = getEl('loadingIndicator');
+    const loadMoreButton = getEl('loadMoreButton');
+    const videoPopup = getEl('videoPopup');
+    const videoPopupContent = getEl('videoPopupContent');
+    const videoContainerPopup = getEl('videoContainerPopup');
+    const infoPopup = getEl('infoPopup');
+    const loopButton = getEl('loopButton');
+    const speedButtonText = getEl('speedButtonText');
+    const filterOptionsContainer = getEl('filterOptions');
+    const notification = getEl('notification');
+    const notificationMessage = getEl('notificationMessage');
+    const appHeader = getEl('appHeader');
+
+    // --- NOTIFICATION ---
+    function showNotification(message, isError = true) {
+        notificationMessage.textContent = message;
+        notification.className = `fixed top-5 right-5 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 translate-y-10 transition-all duration-300 z-50 ${isError ? 'bg-red-500' : 'bg-green-500'}`;
+        notification.classList.remove('opacity-0', 'translate-y-10');
+        setTimeout(() => {
+            notification.classList.add('opacity-0', 'translate-y-10');
+        }, 3000);
+    }
+
+    // --- AUTH & INITIALIZATION ---
+    async function initializeApp() {
+        renderSkeletonLoaders();
+        try {
+            const response = await fetch(videosUrl);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const text = await response.text();
+            const urls = text.split('\n').filter(url => url.trim() !== '' && (url.includes('.mp4') || url.includes('.webm')));
+            
+            const videos = urls.map(url => ({
+                src: url,
+                title: url.split('/').pop().replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ')
+            }));
+            allVideos = [...videos].sort(() => Math.random() - 0.5);
+            heroPlaylist = [...videos].sort(() => Math.random() - 0.5);
+
+            setupHeroBanner();
+            loadingIndicator.innerHTML = '';
+            videoContainer.innerHTML = ''; // Clear skeletons
+            loadMoreVideos();
+
+        } catch (error) {
+            console.error("Failed to fetch videos:", error);
+            loadingIndicator.innerHTML = '<p class="text-red-400">فشل تحميل قائمة الفيديوهات. الرجاء المحاولة لاحقاً.</p>';
+            showNotification("فشل تحميل قائمة الفيديوهات.");
+        }
+    }
+
+    function checkPassword() {
+        if (passwordInput.value === "1432145") {
+            passwordPopup.classList.add('opacity-0', 'invisible');
+            setTimeout(() => {
+                passwordPopup.classList.add('hidden');
+                contentWrapper.classList.remove('hidden');
+                loadAndApplyTheme();
+                initializeApp();
+            }, 300);
+        } else {
+            passwordError.classList.remove('hidden');
+            passwordInput.value = "";
+            passwordInput.focus();
+        }
+    }
+    passwordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkPassword(); });
+
+    // --- HERO BANNER ---
+    function setupHeroBanner() {
+        if (heroPlaylist.length > 0) {
+            playNextHeroVideo();
+        }
+    }
+    
+    function playNextHeroVideo() {
+        if (heroPlaylist.length === 0) return;
+        heroVideo.src = heroPlaylist[currentHeroIndex].src;
+        heroVideo.muted = true;
+        heroVideo.play().catch(()=>{});
+        currentHeroIndex = (currentHeroIndex + 1) % heroPlaylist.length;
+        heroPlayBtn.classList.remove('hidden');
+        updateMuteIcon();
+    }
+
+    function updateMuteIcon() {
+        getEl('hero-unmute-icon').classList.toggle('hidden', heroVideo.muted);
+        getEl('hero-mute-icon').classList.toggle('hidden', !heroVideo.muted);
+    }
+
+    heroVideo.addEventListener('ended', playNextHeroVideo);
+    heroVideo.addEventListener('timeupdate', () => {
+        if (heroVideo.duration) {
+            const progress = (heroVideo.currentTime / heroVideo.duration);
+            heroProgressBar.style.transform = `scaleX(${progress})`;
+        }
+    });
+    
+    heroPlayBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        heroVideo.muted = false;
+        heroVideo.currentTime = 0;
+        heroVideo.play();
+        heroPlayBtn.classList.add('hidden');
+        updateMuteIcon();
+    });
+
+    heroMuteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        heroVideo.muted = !heroVideo.muted;
+        updateMuteIcon();
+    });
+
+    // --- THEME ---
+    function applyTheme(theme) {
+        document.documentElement.className = theme;
+        getEl('theme-icon-sun').classList.toggle('hidden', theme === 'light');
+        getEl('theme-icon-moon').classList.toggle('hidden', theme === 'dark');
+    }
+
+    function toggleTheme() {
+        const newTheme = document.documentElement.className === 'dark' ? 'light' : 'dark';
+        applyTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+    }
+
+    function loadAndApplyTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        applyTheme(savedTheme);
+    }
+
+    // --- VIDEO LOADING & DISPLAY ---
+    function renderSkeletonLoaders() {
+        let skeletons = '';
+        for (let i = 0; i < videosPerLoad; i++) {
+            skeletons += '<div class="skeleton-card"><div class="skeleton-img"></div></div>';
+        }
+        videoContainer.innerHTML = skeletons;
+    }
+
+    function createVideoCard(videoData) {
+        const card = document.createElement('div');
+        card.className = 'video-card group relative rounded-xl overflow-hidden bg-[var(--surface-dark)] shadow-lg cursor-pointer transition-all duration-500 hover:shadow-[var(--accent)]/20 hover:-translate-y-1.5 hover:shadow-2xl border border-[var(--surface-light)]';
+        card.onclick = () => openPopup(videoData.src);
+        card.dataset.title = videoData.title.toLowerCase();
+
+        const thumbnail = document.createElement('img');
+        thumbnail.alt = videoData.title;
+        thumbnail.className = 'w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110';
+        thumbnail.src = `https://placehold.co/400x225/1A1A1D/2C2C30?text=...`;
+        
+        const videoEl = document.createElement('video');
+        videoEl.crossOrigin = "anonymous";
+        videoEl.preload = 'metadata';
+        videoEl.src = videoData.src;
+        videoEl.onloadedmetadata = () => { videoEl.currentTime = 1; };
+        videoEl.onseeked = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = videoEl.videoWidth;
+                canvas.height = videoEl.videoHeight;
+                canvas.getContext('2d').drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+                thumbnail.src = canvas.toDataURL('image/jpeg');
+            } catch (e) { thumbnail.onerror(); }
+        };
+        videoEl.onerror = thumbnail.onerror = () => {
+             thumbnail.src = `https://placehold.co/400x225/1A1A1D/A0A0A0?text=Error`;
+        };
+
+        const overlay = document.createElement('div');
+        overlay.className = 'absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent';
+        const infoContainer = document.createElement('div');
+        infoContainer.className = 'absolute bottom-0 left-0 right-0 p-3 text-white';
+        const title = document.createElement('h3');
+        title.className = 'font-semibold text-sm truncate capitalize';
+        title.textContent = videoData.title;
+        
+        const playIcon = document.createElement('div');
+        playIcon.className = 'absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300';
+        playIcon.innerHTML = `<div class="bg-black/50 rounded-full p-3 backdrop-blur-sm"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></div>`;
+
+        infoContainer.appendChild(title);
+        card.append(thumbnail, overlay, infoContainer, playIcon);
+        return card;
+    }
+
+    function loadMoreVideos() {
+        const newVideos = allVideos.slice(loadedVideosCount, loadedVideosCount + videosPerLoad);
+        newVideos.forEach(video => {
+            const card = createVideoCard(video);
+            videoContainer.appendChild(card);
+        });
+        loadedVideosCount += newVideos.length;
+        const remaining = allVideos.length - loadedVideosCount;
+        loadMoreButton.classList.toggle('hidden', remaining <= 0);
+        if (remaining > 0) {
+            loadMoreButton.textContent = `تحميل ${Math.min(videosPerLoad, remaining)} المزيد`;
+        }
+    }
+
+    // --- POPUP & PLAYER CONTROLS ---
+    function openPopup(videoSrc) {
+        videoContainerPopup.innerHTML = `<video id="videoPlayer" class="w-full h-full object-contain" controls autoplay playsinline></video>`;
+        const video = getEl('videoPlayer');
+        video.src = videoSrc;
+        
+        videoPopup.classList.remove('invisible', 'opacity-0');
+        videoPopupContent.classList.remove('popup-enter-from');
+        
+        video.playbackRate = currentSpeed;
+        applyFilters(video);
+        video.loop = loopButton.classList.contains('bg-[var(--accent)]');
+        
+        video.addEventListener('error', () => {
+             showNotification('لا يمكن تشغيل الفيديو. قد يكون الرابط غير صحيح.');
+             closePopup();
+        });
+    }
+
+    function closePopup() {
+        if (!videoPopup.classList.contains('invisible')) {
+            videoPopupContent.classList.add('popup-enter-from');
+            videoPopup.classList.add('opacity-0');
+            setTimeout(() => {
+                videoPopup.classList.add('invisible');
+                videoContainerPopup.innerHTML = '';
+            }, 300);
+        }
+        if (!infoPopup.classList.contains('invisible')) {
+            infoPopup.querySelector('div').classList.add('popup-enter-from');
+            infoPopup.classList.add('opacity-0');
+            setTimeout(() => infoPopup.classList.add('invisible'), 300);
+        }
+    }
+    
+    function openInfoPopup() {
+        infoPopup.classList.remove('invisible', 'opacity-0');
+        infoPopup.querySelector('div').classList.remove('popup-enter-from');
+    }
+    
+    function closeInfoPopup() {
+        if (!infoPopup.classList.contains('invisible')) {
+            infoPopup.querySelector('div').classList.add('popup-enter-from');
+            infoPopup.classList.add('opacity-0');
+            setTimeout(() => infoPopup.classList.add('invisible'), 300);
+        }
+    }
+
+    function playRandomVideo() {
+        if (allVideos.length > 0) {
+            const randomIndex = Math.floor(Math.random() * allVideos.length);
+            openPopup(allVideos[randomIndex].src);
+        }
+    }
+
+    async function shareVideo() {
+        const video = getEl('videoPlayer');
+        if (video && video.currentSrc) {
+            try {
+                await navigator.clipboard.writeText(video.currentSrc);
+                showNotification('تم نسخ رابط الفيديو!', false);
+            } catch (err) {
+                showNotification('فشل نسخ الرابط.');
+            }
+        }
+    }
+
+    function toggleLoop() {
+        const video = getEl('videoPlayer');
+        if (video) {
+            video.loop = !video.loop;
+            loopButton.classList.toggle('bg-[var(--accent)]', video.loop);
+            loopButton.classList.toggle('text-white', video.loop);
+        }
+    }
+
+    function setPlaybackSpeed(speed) {
+        const video = getEl('videoPlayer');
+        if (video) {
+            video.playbackRate = speed;
+            currentSpeed = speed;
+            speedButtonText.textContent = `${speed}x`;
+            document.querySelectorAll('.speed-option').forEach(opt => {
+                opt.classList.toggle('active', parseFloat(opt.dataset.speed) === speed);
+            });
+        }
+    }
+
+    // --- FILTER CONTROLS ---
+    function applyFilters(video) {
+        if (video) {
+            video.style.filter = Object.entries(filterSettings)
+                .map(([key, value]) => {
+                    const unit = key === 'hue-rotate' ? 'deg' : key === 'blur' ? 'px' : '%';
+                    return `${key}(${value}${unit})`;
+                }).join(' ');
+        }
+    }
+
+    function createFilterSliders() {
+        const filters = [
+            { id: 'brightness', name: 'السطوع', min: 0, max: 200, value: 100, unit: '%' },
+            { id: 'contrast', name: 'التباين', min: 0, max: 200, value: 100, unit: '%' },
+            { id: 'saturate', name: 'التشبع', min: 0, max: 200, value: 100, unit: '%' },
+            { id: 'hue-rotate', name: 'تدرج اللون', min: 0, max: 360, value: 0, unit: 'deg' },
+            { id: 'blur', name: 'الضبابية', min: 0, max: 10, value: 0, unit: 'px' },
+        ];
+        
+        const fragment = document.createDocumentFragment();
+        filters.forEach(filter => {
+            const container = document.createElement('div');
+            container.innerHTML = `
+                <div class="flex justify-between items-center text-sm mb-1">
+                    <label for="${filter.id}" class="text-[var(--text-secondary)]">${filter.name}</label>
+                    <span id="${filter.id}-value" class="text-[var(--text-primary)] font-mono">${filter.value}${filter.unit}</span>
+                </div>
+                <input type="range" id="${filter.id}" min="${filter.min}" max="${filter.max}" value="${filter.value}" class="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[var(--accent)]">
+            `;
+            fragment.prepend(container);
+        });
+        
+        filterOptionsContainer.prepend(fragment);
+
+        filters.forEach(filter => {
+            getEl(filter.id).addEventListener('input', (e) => {
+                const video = getEl('videoPlayer');
+                filterSettings[filter.id] = e.target.value;
+                getEl(`${filter.id}-value`).textContent = `${e.target.value}${filter.unit}`;
+                if(video) applyFilters(video);
+            });
+        });
+    }
+
+    function resetFilters() {
+        filterSettings = { ...defaultFilterSettings };
+        const video = getEl('videoPlayer');
+        if(video) applyFilters(video);
+        Object.entries(filterSettings).forEach(([key, value]) => {
+            const slider = getEl(key);
+            if (slider) {
+                slider.value = value;
+                const unit = key === 'hue-rotate' ? 'deg' : key === 'blur' ? 'px' : '%';
+                getEl(`${key}-value`).textContent = `${value}${unit}`;
+            }
+        });
+    }
+
+    // --- EVENT LISTENERS ---
+    document.addEventListener('DOMContentLoaded', createFilterSliders);
+
+    filterInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        document.querySelectorAll('.video-card').forEach(card => {
+            card.classList.toggle('hidden', !card.dataset.title.includes(searchTerm));
+        });
+    });
+
+    document.addEventListener('keydown', (e) => {
+        const video = getEl('videoPlayer');
+        if (e.key === 'Escape') closePopup();
+        if (!['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+            if (video) {
+                e.preventDefault();
+                switch(e.key.toLowerCase()) {
+                    case ' ': video.paused ? video.play() : video.pause(); break;
+                    case 'f': document.fullscreenElement ? document.exitFullscreen() : videoPopupContent.requestFullscreen(); break;
+                    case 'm': video.muted = !video.muted; break;
+                    case 'arrowright': video.currentTime += 5; break;
+                    case 'arrowleft': video.currentTime -= 5; break;
+                }
+            }
+        }
+    });
+    
+    const observer = new IntersectionObserver(
+        ([entry]) => {
+            appHeader.classList.toggle('opacity-0', entry.isIntersecting);
+            appHeader.classList.toggle('-translate-y-full', entry.isIntersecting);
+            if (document.hasFocus()) {
+                 entry.isIntersecting ? heroVideo.play().catch(()=>{}) : heroVideo.pause();
+            }
+        },
+        { threshold: 0.1 }
+    );
+    if(heroBanner) observer.observe(heroBanner);
+    
+    </script>
+</body>
+</html>
