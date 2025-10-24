@@ -65,14 +65,66 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* إخفاء شريط التمرير لنافذة البوب أب */
-        #videoPopup::-webkit-scrollbar {
+        #videoPopup::-webkit-scrollbar { display: none; }
+        #videoPopup { scrollbar-width: none; -ms-overflow-style: none; }
+
+        /* !!! أنماط أزرار عرض الشرائح */
+        .slideshow-control {
+            position: fixed;
+            z-index: 70;
+            background-color: rgba(0, 0, 0, 0.3);
+            color: white;
+            border-radius: 9999px; /* rounded-full */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.3;
+            transition: opacity 0.3s, background-color 0.3s;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+        }
+        .slideshow-control:hover {
+            opacity: 0.9;
+        }
+        #slideshowExitBtn { top: 1rem; right: 1rem; width: 40px; height: 40px; }
+        #slideshowNextBtn { top: 50%; right: 1rem; transform: translateY(-50%); width: 48px; height: 48px; }
+        #slideshowPrevBtn { top: 50%; left: 1rem; transform: translateY(-50%); width: 48px; height: 48px; }
+        #slideshowLoopBtn { bottom: 1rem; left: 1rem; width: 40px; height: 40px; }
+        #slideshowLockBtn { bottom: 1rem; right: 1rem; width: 40px; height: 40px; }
+        
+        .slideshow-control.active-accent {
+            background-color: var(--accent);
+            opacity: 0.8;
+        }
+
+        /* !!! أنماط القفل */
+        #slideshowContainer.controls-hidden .slideshow-control {
             display: none;
         }
-        #videoPopup {
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none;  /* IE 10+ */
+        #slideshowContainer.controls-hidden #slideshowLockBtn {
+            display: flex;
+            opacity: 0.01; /* شبه مخفي */
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: auto;
+            right: auto;
+            background: rgba(255, 255, 255, 0.01); /* منطقة ضغط شفافة */
+            width: 200px;
+            height: 50px;
+            border-radius: 0 0 10px 10px;
+            border: none;
+            backdrop-filter: none;
         }
+        #slideshowContainer.controls-hidden #slideshowLockBtn svg {
+             visibility: hidden; /* إخفاء الأيقونة فقط */
+        }
+        #slideshowContainer.controls-hidden #slideshowLockBtn:hover {
+            opacity: 0.3; /* إظهار المنطقة عند التحويم */
+            background: rgba(255, 255, 255, 0.1);
+        }
+
     </style>
 </head>
 <body class="transition-colors duration-300">
@@ -134,7 +186,7 @@
                     </div>
                 </div>
 
-                <!-- قسم الأزرار الجديد -->
+                <!-- قسم الأزرار -->
                 <div class="flex flex-wrap justify-center gap-3 mb-8">
                     <button id="fullscreenBtn" title="ملء الشاشة" class="flex items-center justify-center gap-2 h-11 px-4 rounded-lg bg-[var(--surface-dark)] hover:bg-[var(--surface-light)] border border-[var(--surface-light)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all text-sm font-medium">
                         <svg id="fullscreen-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
@@ -152,7 +204,6 @@
                         <span>تشغيل الكل</span>
                     </button>
                     
-                    <!-- !!! الزر الجديد لتشغيل Pomf -->
                     <button onclick="startPomfSlideshow()" title="تشغيل فيديوهات Pomf فقط" class="flex items-center justify-center gap-2 h-11 px-4 rounded-lg bg-[var(--surface-dark)] hover:bg-[var(--surface-light)] border border-[var(--surface-light)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all text-sm font-medium">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 7 7-7 7m18-7h-9"></path><path d="m14 3 7 7-7 7"></path></svg>
                         <span>تشغيل Pomf</span>
@@ -196,25 +247,19 @@
         </div>
     </div>
 
-    <!-- نافذة الفيديو مُعدلة (أكبر ومخفية الفلاتر) -->
+    <!-- نافذة الفيديو -->
     <div id="videoPopup" class="fixed inset-0 bg-black/80 backdrop-blur-xl flex justify-center overflow-y-auto z-40 p-4 sm:py-10 opacity-0 invisible transition-opacity duration-300">
         <div id="videoPopupContent" class="w-full max-w-6xl bg-[var(--surface-dark)] rounded-2xl shadow-2xl border border-[var(--surface-light)] m-auto popup-enter-from">
             
-            <!-- 1. الفيديو الثابت في الأعلى -->
             <div id="videoContainerPopup" class="w-full aspect-video bg-black relative rounded-t-2xl sticky top-0 z-10">
-                <!-- سيتم حقن الفيديو هنا -->
+                <!-- Video injected here -->
             </div>
             
-            <!-- 2. شريط التحكم -->
             <div class="p-4 border-t border-[var(--surface-light)]">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                      <div class="flex items-center gap-2">
                          <button id="shareButton" onclick="shareVideo()" title="مشاركة الرابط" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 transition-all active:scale-95 active:bg-[var(--accent)]/50"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
-                         
-                         <button id="filterToggleButton" onclick="toggleFilterSection()" title="إظهار/إخفاء الفلاتر" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition-all">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-                         </button>
-                         
+                         <button id="filterToggleButton" onclick="toggleFilterSection()" title="إظهار/إخفاء الفلاتر" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg></button>
                          <button id="loopButton" onclick="toggleLoop()" title="إعادة تشغيل" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h12"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H5"/></svg></button>
                          <button onclick="closePopup()" title="إغلاق (Esc)" class="p-2 rounded-full bg-red-600/20 hover:bg-red-600/40 text-red-400 transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
                      </div>
@@ -227,12 +272,9 @@
                 </div>
             </div>
             
-            <!-- 3. قسم الفلاتر (مخفي افتراضيًا) -->
             <div id="filterOptions" class="p-6 border-t border-[var(--surface-light)] space-y-5 hidden">
                 <h3 class="text-xl font-semibold text-[var(--text-primary)]">فلاتر الفيديو</h3>
-                <div id="filterSlidersContainer" class="space-y-4">
-                    <!-- سيتم حقن أشرطة التمرير هنا بواسطة الجافاسكربت -->
-                </div>
+                <div id="filterSlidersContainer" class="space-y-4"><!-- Sliders injected here --></div>
                 <button class="w-full mt-4 py-3 rounded-lg bg-[var(--surface-dark)] hover:bg-[var(--surface-light)] border border-[var(--surface-light)] text-[var(--text-primary)] transition font-semibold" onclick="resetFilters()">إعادة تعيين الفلاتر</button>
             </div>
 
@@ -255,12 +297,36 @@
         <p id="notificationMessage"></p>
     </div>
 
-    <!-- حاوية عرض الشرائح (ملء الشاشة الحقيقي) -->
+    <!-- !!! حاوية عرض الشرائح (مُحدّثة بالكامل) -->
     <div id="slideshowContainer" class="fixed inset-0 bg-black z-[60] hidden">
         <video id="slideshowVideo" class="w-full h-full object-contain" autoplay playsinline></video>
+        
         <!-- زر الخروج -->
-        <button onclick="stopRandomSlideshow()" title="إغلاق العرض (Esc)" class="fixed top-4 right-4 z-[70] text-white/30 hover:text-white/80 transition-opacity">
-            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        <button id="slideshowExitBtn" onclick="stopRandomSlideshow()" title="إغلاق العرض (Esc)" class="slideshow-control">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+
+        <!-- زر التالي -->
+        <button id="slideshowNextBtn" onclick="playNextSlideshowVideo()" title="التالي" class="slideshow-control">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+        
+        <!-- زر السابق -->
+        <button id="slideshowPrevBtn" onclick="playPrevSlideshowVideo()" title="السابق" class="slideshow-control">
+             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        
+        <!-- زر التكرار -->
+        <button id="slideshowLoopBtn" onclick="toggleSlideshowLoop()" title="تكرار" class="slideshow-control">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h12"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H5"/></svg>
+        </button>
+        
+        <!-- زر القفل -->
+        <button id="slideshowLockBtn" onclick="toggleSlideshowLock()" title="قفل/فتح الأزرار" class="slideshow-control">
+            <!-- أيقونة القفل المفتوح -->
+            <svg id="lock-open-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+            <!-- أيقونة القفل المغلق -->
+            <svg id="lock-closed-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
         </button>
     </div>
 
@@ -276,11 +342,14 @@
     const defaultFilterSettings = { brightness: 100, contrast: 100, saturate: 100, 'hue-rotate': 0, blur: 0 };
     let filterSettings = { ...defaultFilterSettings };
     const videosUrl = "https://raw.githubusercontent.com/Aminoxdag/catbox-inonrr/refs/heads/main/inonrr.txt";
-    let currentSortState = -1; // -1: random (initial), 0: default (A-Z), 1: desc (longest), 2: asc (shortest)
+    let currentSortState = -1; // -1: random (initial), 0: A-Z, 1: Longest, 2: Shortest
 
+    // --- SLIDESHOW STATE ---
     let isSlideshowActive = false;
     let slideshowPlaylist = [];
     let currentSlideshowIndex = 0;
+    let isSlideshowLooping = false; // !!! حالة التكرار
+    let isSlideshowLocked = false; // !!! حالة القفل
 
     // --- DOM ELEMENTS ---
     const getEl = (id) => document.getElementById(id);
@@ -313,8 +382,13 @@
     const exitFullscreenIcon = getEl('exit-fullscreen-icon');
     const themeText = getEl('theme-text');
     const filterSlidersContainer = getEl('filterSlidersContainer');
+    // --- SLIDESHOW DOM ---
     const slideshowContainer = getEl('slideshowContainer');
     const slideshowVideo = getEl('slideshowVideo');
+    const slideshowLoopBtn = getEl('slideshowLoopBtn');
+    const slideshowLockBtn = getEl('slideshowLockBtn');
+    const lockOpenIcon = getEl('lock-open-icon');
+    const lockClosedIcon = getEl('lock-closed-icon');
 
 
     // --- NOTIFICATION ---
@@ -533,10 +607,8 @@
         thumbnailVideo.addEventListener('loadedmetadata', () => {
             spinnerContainer.style.display = 'none'; 
             thumbnailVideo.classList.remove('opacity-0');
-            // !!! إصلاح الفرز: تخزين المدة في الكائن الأساسي
             const duration = thumbnailVideo.duration;
             card.dataset.duration = duration;
-            // البحث في allVideos وتحديث المدة
             const videoObj = allVideos.find(v => v.src === videoData.src);
             if (videoObj) {
                 videoObj.duration = duration;
@@ -566,7 +638,6 @@
     }
 
     function loadMoreVideos() {
-        // تصفية البحث المطبق
         const searchTerm = filterInput.value.toLowerCase();
         const videosToLoad = allVideos
             .filter(v => v.title.toLowerCase().includes(searchTerm))
@@ -579,7 +650,6 @@
         
         loadedVideosCount += videosToLoad.length;
         
-        // حساب المتبقي بناءً على البحث
         const totalMatching = allVideos.filter(v => v.title.toLowerCase().includes(searchTerm)).length;
         const remaining = totalMatching - loadedVideosCount;
         
@@ -596,7 +666,6 @@
         cards.forEach(card => videoContainer.appendChild(card)); 
     }
 
-    // !!! وظيفة الفرز (مُصلحة)
     function toggleSortByDuration() {
         // -1: random, 0: A-Z, 1: Longest, 2: Shortest
         currentSortState = (currentSortState + 1) % 4; 
@@ -604,28 +673,27 @@
         
         allVideos.forEach(v => v.duration = parseFloat(v.duration || 0));
         
-        if (currentSortState === 0) { // افتراضي (فرز بالاسم A-Z)
+        if (currentSortState === 0) { // A-Z
             allVideos.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
             if(sortBtnText) sortBtnText.textContent = "فرز: افتراضي";
-        } else if (currentSortState === 1) { // الأطول أولاً (تنازلي)
+        } else if (currentSortState === 1) { // Longest
             allVideos.sort((a, b) => b.duration - a.duration);
             if(sortBtnText) sortBtnText.textContent = "فرز: الأطول";
-        } else if (currentSortState === 2) { // الأقصر أولاً (تصاعدي)
+        } else if (currentSortState === 2) { // Shortest
             allVideos.sort((a, b) => a.duration - a.duration);
             if(sortBtnText) sortBtnText.textContent = "فرز: الأقصر";
-        } else { // currentSortState === 3 (نعود للعشوائي)
+        } else { // currentSortState === 3 (Back to random)
             allVideos.sort(() => Math.random() - 0.5);
             if(sortBtnText) sortBtnText.textContent = "فرز: عشوائي";
-            currentSortState = -1; // إعادة التعيين للدورة القادمة
+            currentSortState = -1; // Reset for next cycle
         }
 
-        // إعادة تحميل الحاوية بالكامل بناءً على الفرز الجديد
         videoContainer.innerHTML = '';
         loadedVideosCount = 0;
-        loadMoreVideos(); // سيستخدم القائمة المفرزة الجديدة
+        loadMoreVideos(); 
     }
 
-    // --- SLIDESHOW FUNCTIONS (!!! مُعدلة) ---
+    // --- SLIDESHOW FUNCTIONS (!!! مُحدّثة) ---
     
     function handleGeneralFullscreenChange() {
         updateFullscreenIcon(); 
@@ -642,13 +710,12 @@
         }
         
         isSlideshowActive = true;
-        slideshowPlaylist = [...allVideos].sort(() => Math.random() - 0.5); // كل الفيديوهات
+        slideshowPlaylist = [...allVideos].sort(() => Math.random() - 0.5); // All videos
         currentSlideshowIndex = 0;
         
         startSlideshowPlayer();
     }
     
-    // !!! وظيفة تشغيل Pomf الجديدة
     function startPomfSlideshow() {
         const pomfVideos = allVideos.filter(video => video.src.includes('pomf'));
         
@@ -658,13 +725,12 @@
         }
         
         isSlideshowActive = true;
-        slideshowPlaylist = [...pomfVideos].sort(() => Math.random() - 0.5); // فيديوهات Pomf فقط
+        slideshowPlaylist = [...pomfVideos].sort(() => Math.random() - 0.5); // Pomf videos only
         currentSlideshowIndex = 0;
 
         startSlideshowPlayer();
     }
     
-    // !!! وظيفة المساعد لبدء العارض
     function startSlideshowPlayer() {
         slideshowContainer.classList.remove('hidden');
         
@@ -674,26 +740,71 @@
             slideshowContainer.webkitRequestFullscreen();
         }
 
+        // !!! إعادة تعيين حالة الأزرار عند البدء
+        isSlideshowLooping = false;
+        slideshowVideo.loop = false;
+        slideshowLoopBtn.classList.remove('active-accent');
+        
+        isSlideshowLocked = false;
+        slideshowContainer.classList.remove('controls-hidden');
+        lockOpenIcon.classList.remove('hidden');
+        lockClosedIcon.classList.add('hidden');
+
+        playSlideshowVideoAtIndex();
+        
+        slideshowVideo.onended = () => {
+            if (!isSlideshowLooping) {
+                playNextSlideshowVideo();
+            }
+        };
+        slideshowVideo.onerror = () => {
+             playNextSlideshowVideo(); // Skip on error
+        };
+    }
+
+    // !!! وظيفة جديدة لتشغيل الفيديو بالـ index
+    function playSlideshowVideoAtIndex() {
+        if (currentSlideshowIndex < 0 || currentSlideshowIndex >= slideshowPlaylist.length) {
+             stopRandomSlideshow(); // Safety check
+             return;
+        }
         slideshowVideo.src = slideshowPlaylist[currentSlideshowIndex].src;
         slideshowVideo.playbackRate = currentSpeed; 
-        applyFilters(slideshowVideo); // تطبيق الفلاتر
+        applyFilters(slideshowVideo);
         slideshowVideo.play();
-        slideshowVideo.onended = playNextSlideshowVideo;
-        slideshowVideo.onerror = playNextSlideshowVideo; // !!! تخطي الفيديو عند حدوث خطأ
     }
 
+    // !!! وظيفة "التالي" (يدوية)
     function playNextSlideshowVideo() {
         if (!isSlideshowActive) return;
-
-        currentSlideshowIndex++;
-        if (currentSlideshowIndex < slideshowPlaylist.length) {
-            slideshowVideo.src = slideshowPlaylist[currentSlideshowIndex].src;
-            slideshowVideo.play();
-        } else {
-            // انتهى العرض
-            stopRandomSlideshow();
-        }
+        currentSlideshowIndex = (currentSlideshowIndex + 1) % slideshowPlaylist.length;
+        playSlideshowVideoAtIndex();
     }
+    
+    // !!! وظيفة "السابق" (يدوية)
+    function playPrevSlideshowVideo() {
+         if (!isSlideshowActive) return;
+        currentSlideshowIndex = (currentSlideshowIndex - 1 + slideshowPlaylist.length) % slideshowPlaylist.length;
+        playSlideshowVideoAtIndex();
+    }
+    
+    // !!! وظيفة "تكرار"
+    function toggleSlideshowLoop() {
+        if (!isSlideshowActive) return;
+        isSlideshowLooping = !isSlideshowLooping;
+        slideshowVideo.loop = isSlideshowLooping;
+        slideshowLoopBtn.classList.toggle('active-accent', isSlideshowLooping);
+    }
+    
+    // !!! وظيفة "القفل"
+    function toggleSlideshowLock() {
+        if (!isSlideshowActive) return;
+        isSlideshowLocked = !isSlideshowLocked;
+        slideshowContainer.classList.toggle('controls-hidden', isSlideshowLocked);
+        lockOpenIcon.classList.toggle('hidden', isSlideshowLocked);
+        lockClosedIcon.classList.toggle('hidden', !isSlideshowLocked);
+    }
+
 
     function stopRandomSlideshow() {
         if (!isSlideshowActive) return; 
@@ -705,6 +816,12 @@
         slideshowVideo.onended = null;
         slideshowVideo.onerror = null;
         slideshowPlaylist = [];
+        
+        // !!! إعادة تعيين الحالات عند الخروج
+        isSlideshowLooping = false;
+        isSlideshowLocked = false;
+        slideshowContainer.classList.remove('controls-hidden');
+        slideshowLoopBtn.classList.remove('active-accent');
         
         if (document.fullscreenElement) {
             document.exitFullscreen();
@@ -922,10 +1039,9 @@
     document.addEventListener('DOMContentLoaded', createFilterSliders);
 
     filterInput.addEventListener('input', (e) => {
-        // !!! إصلاح البحث ليعمل مع الفرز
         videoContainer.innerHTML = '';
         loadedVideosCount = 0;
-        loadMoreVideos(); // سيعيد التحميل بناءً على allVideos المفرزة وقيمة البحث
+        loadMoreVideos(); 
     });
 
 
@@ -935,6 +1051,7 @@
         }
         
         if (!['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+            // اختصارات النافذة المنبثقة
             if (!isSlideshowActive && videoPopup.classList.contains('opacity-0') === false) {
                 const video = getEl('videoPlayer');
                 if (video) {
@@ -958,6 +1075,18 @@
                         case 'arrowright': video.currentTime += 5; break;
                         case 'arrowleft': video.currentTime -= 5; break;
                     }
+                }
+            }
+            // !!! اختصارات عرض الشرائح
+            else if (isSlideshowActive) {
+                if ([' ', 'l', 'arrowright', 'arrowleft'].includes(e.key.toLowerCase())) {
+                    e.preventDefault();
+                }
+                switch(e.key.toLowerCase()) {
+                    case ' ': slideshowVideo.paused ? slideshowVideo.play() : slideshowVideo.pause(); break;
+                    case 'arrowright': playNextSlideshowVideo(); break;
+                    case 'arrowleft': playPrevSlideshowVideo(); break;
+                    case 'l': toggleSlideshowLoop(); break;
                 }
             }
         }
