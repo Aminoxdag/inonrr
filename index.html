@@ -30,7 +30,6 @@
             background-color: var(--bg-dark);
             color: var(--text-primary);
             overflow-x: hidden;
-            /* Hide scrollbar for a more app-like feel */
             scrollbar-width: none; /* Firefox */
             -ms-overflow-style: none;  /* Internet Explorer 10+ */
         }
@@ -56,6 +55,24 @@
             transform-origin: right;
             transition: transform 0.2s linear;
         }
+        
+        .spinner {
+            border: 4px solid var(--surface-light);
+            border-left-color: var(--accent);
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* إخفاء شريط التمرير لنافذة البوب أب */
+        #videoPopup::-webkit-scrollbar {
+            display: none;
+        }
+        #videoPopup {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* IE 10+ */
+        }
     </style>
 </head>
 <body class="transition-colors duration-300">
@@ -79,21 +96,21 @@
             <video id="heroVideo" class="absolute inset-0 w-full h-full object-cover" autoplay muted playsinline></video>
             <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
             
-            <div class="absolute top-0 left-0 p-6 z-10">
-                 <button id="heroMuteBtn" title="كتم/إلغاء كتم الصوت" class="h-12 w-12 flex items-center justify-center bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all">
-                    <svg id="hero-unmute-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                    <svg id="hero-mute-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
-                </button>
+            <div class="absolute top-0 left-0 p-6 z-20">
+                 <button id="heroMuteBtn" title="كتم/إلغاء كتم الصوت" class="h-12 w-12 flex items-center justify-center bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all shadow-lg shadow-black/30">
+                       <svg id="hero-unmute-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                       <svg id="hero-mute-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                 </button>
             </div>
 
-            <div class="absolute bottom-0 left-0 p-6 z-10">
-                <button id="heroPlayBtn" class="px-5 py-2 flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-lg text-white font-semibold hover:bg-white/20 transition-all">
+            <div class="absolute bottom-0 left-0 p-6 z-20">
+                <button id="heroPlayBtn" class="px-5 py-2 flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-lg text-white font-semibold hover:bg-white/20 transition-all shadow-lg shadow-black/30">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                     <span>تشغيل</span>
                 </button>
             </div>
             
-            <div class="absolute bottom-0 left-0 w-full h-1 bg-white/20 z-10">
+            <div class="absolute bottom-0 left-0 w-full h-1 bg-white/20 z-10 pointer-events-none">
                 <div id="heroProgressBar" class="h-full bg-white" style="transform: scaleX(0);"></div>
             </div>
         </section>
@@ -103,32 +120,46 @@
             <header id="appHeader" class="sticky top-0 z-30 py-4 px-4 sm:px-6 lg:px-8 bg-[var(--bg-dark)]/80 backdrop-blur-xl transition-all duration-500 border-b border-[var(--surface-light)] opacity-0 -translate-y-full">
                 <div class="max-w-7xl mx-auto flex justify-between items-center gap-4">
                     <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Jojo Gallery</h1>
-                    <div class="flex items-center space-x-2">
-                        <button onclick="playRandomVideo()" title="تشغيل فيديو عشوائي" class="h-10 px-3 flex items-center gap-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-300 hover:text-white transition-all">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
-                            <span class="hidden sm:inline">عشوائي</span>
-                        </button>
-                        <button onclick="openInfoPopup()" title="معلومات" class="h-10 w-10 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-all">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                        </button>
-                        <button onclick="toggleTheme()" title="تغيير المظهر" class="h-10 w-10 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-all">
-                            <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                            <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                        </button>
-                    </div>
                 </div>
             </header>
 
             <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-                <div class="mb-8">
+                <!-- شريط البحث -->
+                <div class="mb-6">
                     <div class="relative">
                         <input type="text" id="filterInput" placeholder="ابحث عن فيديو..." class="w-full bg-[var(--surface-dark)] border border-[var(--surface-light)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] rounded-lg pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition">
                          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <svg class="h-5 w-5 text-[var(--text-secondary)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
-                        </div>
+                             <svg class="h-5 w-5 text-[var(--text-secondary)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                         </div>
                     </div>
                 </div>
 
+                <!-- قسم الأزرار الجديد -->
+                <div class="flex flex-wrap justify-center gap-3 mb-8">
+                    <button id="fullscreenBtn" title="ملء الشاشة" class="flex items-center justify-center gap-2 h-11 px-4 rounded-lg bg-[var(--surface-dark)] hover:bg-[var(--surface-light)] border border-[var(--surface-light)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all text-sm font-medium">
+                        <svg id="fullscreen-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                        <svg id="exit-fullscreen-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path></svg>
+                        <span>ملء الشاشة</span>
+                    </button>
+                    
+                    <button onclick="playRandomVideo()" title="تشغيل فيديو عشوائي" class="flex items-center justify-center gap-2 h-11 px-4 rounded-lg bg-[var(--surface-dark)] hover:bg-[var(--surface-light)] border border-[var(--surface-light)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all text-sm font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+                        <span>عشوائي</span>
+                    </button>
+                    
+                    <button onclick="openInfoPopup()" title="معلومات" class="flex items-center justify-center gap-2 h-11 px-4 rounded-lg bg-[var(--surface-dark)] hover:bg-[var(--surface-light)] border border-[var(--surface-light)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all text-sm font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        <span>معلومات</span>
+                    </button>
+                    
+                    <button onclick="toggleTheme()" title="تغيير المظهر" class="flex items-center justify-center gap-2 h-11 px-4 rounded-lg bg-[var(--surface-dark)] hover:bg-[var(--surface-light)] border border-[var(--surface-light)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all text-sm font-medium">
+                        <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                        <span id="theme-text">المظهر الفاتح</span>
+                    </button>
+                </div>
+
+                <!-- حاوية الفيديوهات -->
                 <div id="videoContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
                 <div id="loadingIndicator" class="text-center py-12"></div>
                 <div class="text-center py-12">
@@ -144,29 +175,41 @@
         </div>
     </div>
 
-    <!-- Video Player Popup -->
-    <div id="videoPopup" class="fixed inset-0 bg-black/80 backdrop-blur-xl flex items-center justify-center z-40 p-4 opacity-0 invisible transition-opacity duration-300">
-        <div id="videoPopupContent" class="w-full max-w-4xl bg-[var(--surface-dark)] rounded-2xl shadow-2xl border border-[var(--surface-light)] flex flex-col overflow-hidden popup-enter-from">
-            <div id="videoContainerPopup" class="w-full aspect-video bg-black relative rounded-t-2xl"></div>
+    <!-- نافذة الفيديو القابلة للنزول -->
+    <div id="videoPopup" class="fixed inset-0 bg-black/80 backdrop-blur-xl flex justify-center overflow-y-auto z-40 p-4 opacity-0 invisible transition-opacity duration-300 py-10">
+        <div id="videoPopupContent" class="w-full max-w-4xl bg-[var(--surface-dark)] rounded-2xl shadow-2xl border border-[var(--surface-light)] my-auto popup-enter-from">
+            
+            <!-- 1. الفيديو الثابت في الأعلى -->
+            <div id="videoContainerPopup" class="w-full aspect-video bg-black relative rounded-t-2xl sticky top-0 z-10">
+                <!-- سيتم حقن الفيديو هنا -->
+            </div>
+            
+            <!-- 2. شريط التحكم -->
             <div class="p-4 border-t border-[var(--surface-light)]">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                      <div class="flex items-center gap-2">
-                        <button id="shareButton" onclick="shareVideo()" title="مشاركة الرابط" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
-                        <button id="loopButton" onclick="toggleLoop()" title="إعادة تشغيل" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h12"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H5"/></svg></button>
-                        <button onclick="closePopup()" title="إغلاق (Esc)" class="p-2 rounded-full bg-red-600/20 hover:bg-red-600/40 text-red-400 transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-                    </div>
-                    <div class="flex items-center gap-2 sm:gap-4">
-                        <div class="relative group">
-                            <button class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 transition-all flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg><span id="speedButtonText">1x</span></button>
-                            <div class="absolute bottom-full mb-2 right-1/2 translate-x-1/2 w-40 bg-[var(--surface-light)] border border-white/10 rounded-lg shadow-xl p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10"><button class="speed-option w-full text-left px-3 py-2 rounded-md hover:bg-white/5" data-speed="0.5" onclick="setPlaybackSpeed(0.5)">0.5x</button><button class="speed-option w-full text-left px-3 py-2 rounded-md hover:bg-white/5 active" data-speed="1" onclick="setPlaybackSpeed(1)">1x (Normal)</button><button class="speed-option w-full text-left px-3 py-2 rounded-md hover:bg-white/5" data-speed="1.5" onclick="setPlaybackSpeed(1.5)">1.5x</button><button class="speed-option w-full text-left px-3 py-2 rounded-md hover:bg-white/5" data-speed="2" onclick="setPlaybackSpeed(2)">2x</button></div>
-                        </div>
-                        <div class="relative group">
-                            <button class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 transition-all flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><span>فلاتر</span></button>
-                            <div id="filterOptions" class="absolute bottom-full mb-2 right-1/2 translate-x-1/2 w-72 bg-[var(--surface-light)] border border-white/10 rounded-lg shadow-xl p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 space-y-4 z-10"><button class="w-full mt-2 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white transition" onclick="resetFilters()">إعادة تعيين</button></div>
-                        </div>
-                    </div>
+                         <button id="shareButton" onclick="shareVideo()" title="مشاركة الرابط" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 transition-all active:scale-95 active:bg-[var(--accent)]/50"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
+                         <button id="loopButton" onclick="toggleLoop()" title="إعادة تشغيل" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h12"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H5"/></svg></button>
+                         <button onclick="closePopup()" title="إغلاق (Esc)" class="p-2 rounded-full bg-red-600/20 hover:bg-red-600/40 text-red-400 transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+                     </div>
+                     <div class="flex items-center gap-2 sm:gap-4">
+                         <div class="relative group">
+                             <button class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 transition-all flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg><span id="speedButtonText">1x</span></button>
+                             <div class="absolute bottom-full mb-2 right-1/2 translate-x-1/2 w-40 bg-[var(--surface-light)] border border-white/10 rounded-lg shadow-xl p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10"><button class="speed-option w-full text-left px-3 py-2 rounded-md hover:bg-white/5" data-speed="0.5" onclick="setPlaybackSpeed(0.5)">0.5x</button><button class="speed-option w-full text-left px-3 py-2 rounded-md hover:bg-white/5 active" data-speed="1" onclick="setPlaybackSpeed(1)">1x (Normal)</button><button class="speed-option w-full text-left px-3 py-2 rounded-md hover:bg-white/5" data-speed="1.5" onclick="setPlaybackSpeed(1.5)">1.5x</button><button class="speed-option w-full text-left px-3 py-2 rounded-md hover:bg-white/5" data-speed="2" onclick="setPlaybackSpeed(2)">2x</button></div>
+                         </div>
+                     </div>
                 </div>
             </div>
+            
+            <!-- 3. قسم الفلاتر -->
+            <div id="filterOptions" class="p-6 border-t border-[var(--surface-light)] space-y-5">
+                <h3 class="text-xl font-semibold text-[var(--text-primary)]">فلاتر الفيديو</h3>
+                <div id="filterSlidersContainer" class="space-y-4">
+                    <!-- سيتم حقن أشرطة التمرير هنا بواسطة الجافاسكربت -->
+                </div>
+                <button class="w-full mt-4 py-3 rounded-lg bg-[var(--surface-dark)] hover:bg-[var(--surface-light)] border border-[var(--surface-light)] text-[var(--text-primary)] transition font-semibold" onclick="resetFilters()">إعادة تعيين الفلاتر</button>
+            </div>
+
         </div>
     </div>
 
@@ -194,6 +237,8 @@
     let loadedVideosCount = 0;
     const videosPerLoad = 12;
     let currentSpeed = 1;
+    // (!!!) إضافة متغير حالة كتم الصوت للهيرو
+    let isHeroMuted = true;
     const defaultFilterSettings = { brightness: 100, contrast: 100, saturate: 100, 'hue-rotate': 0, blur: 0 };
     let filterSettings = { ...defaultFilterSettings };
     const videosUrl = "https://raw.githubusercontent.com/Aminoxdag/catbox-inonrr/refs/heads/main/inonrr.txt";
@@ -224,6 +269,11 @@
     const notification = getEl('notification');
     const notificationMessage = getEl('notificationMessage');
     const appHeader = getEl('appHeader');
+    const fullscreenBtn = getEl('fullscreenBtn');
+    const fullscreenIcon = getEl('fullscreen-icon');
+    const exitFullscreenIcon = getEl('exit-fullscreen-icon');
+    const themeText = getEl('theme-text');
+    const filterSlidersContainer = getEl('filterSlidersContainer');
 
     // --- NOTIFICATION ---
     function showNotification(message, isError = true) {
@@ -290,16 +340,18 @@
     function playNextHeroVideo() {
         if (heroPlaylist.length === 0) return;
         heroVideo.src = heroPlaylist[currentHeroIndex].src;
-        heroVideo.muted = true;
+        // (!!!) استخدام متغير الحالة لتحديد الكتم
+        heroVideo.muted = isHeroMuted; 
         heroVideo.play().catch(()=>{});
         currentHeroIndex = (currentHeroIndex + 1) % heroPlaylist.length;
-        heroPlayBtn.classList.remove('hidden');
         updateMuteIcon();
     }
 
     function updateMuteIcon() {
-        getEl('hero-unmute-icon').classList.toggle('hidden', heroVideo.muted);
-        getEl('hero-mute-icon').classList.toggle('hidden', !heroVideo.muted);
+        // (!!!) تطبيق حالة الكتم على الفيديو والأيقونات
+        heroVideo.muted = isHeroMuted;
+        getEl('hero-unmute-icon').classList.toggle('hidden', isHeroMuted);
+        getEl('hero-mute-icon').classList.toggle('hidden', !isHeroMuted);
     }
 
     heroVideo.addEventListener('ended', playNextHeroVideo);
@@ -312,16 +364,17 @@
     
     heroPlayBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        heroVideo.muted = false;
-        heroVideo.currentTime = 0;
-        heroVideo.play();
-        heroPlayBtn.classList.add('hidden');
-        updateMuteIcon();
+        const currentHeroVideoSrc = heroVideo.src; 
+        heroVideo.pause(); 
+        if (currentHeroVideoSrc) {
+            openPopup(currentHeroVideoSrc); 
+        }
     });
 
     heroMuteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        heroVideo.muted = !heroVideo.muted;
+        // (!!!) تبديل متغير الحالة العام
+        isHeroMuted = !isHeroMuted;
         updateMuteIcon();
     });
 
@@ -330,6 +383,9 @@
         document.documentElement.className = theme;
         getEl('theme-icon-sun').classList.toggle('hidden', theme === 'light');
         getEl('theme-icon-moon').classList.toggle('hidden', theme === 'dark');
+        if (themeText) {
+            themeText.textContent = theme === 'light' ? 'المظهر الداكن' : 'المظهر الفاتح';
+        }
     }
 
     function toggleTheme() {
@@ -342,6 +398,55 @@
         const savedTheme = localStorage.getItem('theme') || 'dark';
         applyTheme(savedTheme);
     }
+
+    // --- FULLSCREEN CONTROLS ---
+    function toggleFullscreen() {
+        if (!document.fullscreenElement &&    // Standard
+            !document.mozFullScreenElement && // Firefox
+            !document.webkitFullscreenElement && // Chrome, Safari, Opera
+            !document.msFullscreenElement) {  // IE/Edge
+            
+            const el = document.documentElement;
+            if (el.requestFullscreen) {
+                el.requestFullscreen();
+            } else if (el.mozRequestFullScreen) { /* Firefox */
+                el.mozRequestFullScreen();
+            } else if (el.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+                el.webkitRequestFullscreen();
+            } else if (el.msRequestFullscreen) { /* IE/Edge */
+                el.msRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.mozCancelFullScreen) { /* Firefox */
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) { /* IE/Edge */
+                document.msExitFullscreen();
+            }
+        }
+    }
+
+    function updateFullscreenIcon() {
+        const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+        
+        fullscreenIcon.classList.toggle('hidden', isFullscreen);
+        exitFullscreenIcon.classList.toggle('hidden', !isFullscreen);
+        
+        const fullscreenText = fullscreenBtn.querySelector('span');
+        if (fullscreenText) {
+            fullscreenText.textContent = isFullscreen ? "الخروج من العرض" : "ملء الشاشة";
+        }
+        fullscreenBtn.title = isFullscreen ? "الخروج من ملء الشاشة" : "ملء الشاشة";
+    }
+
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+    document.addEventListener('fullscreenchange', updateFullscreenIcon);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
+    document.addEventListener('mozfullscreenchange', updateFullscreenIcon);
+    document.addEventListener('MSFullscreenChange', updateFullscreenIcon);
 
     // --- VIDEO LOADING & DISPLAY ---
     function renderSkeletonLoaders() {
@@ -358,28 +463,29 @@
         card.onclick = () => openPopup(videoData.src);
         card.dataset.title = videoData.title.toLowerCase();
 
-        const thumbnail = document.createElement('img');
-        thumbnail.alt = videoData.title;
-        thumbnail.className = 'w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110';
-        thumbnail.src = `https://placehold.co/400x225/1A1A1D/2C2C30?text=...`;
+        const spinnerContainer = document.createElement('div');
+        spinnerContainer.className = 'absolute inset-0 flex items-center justify-center bg-[var(--surface-light)] h-48';
+        spinnerContainer.innerHTML = `<div class="spinner"></div>`;
+
+        const thumbnailVideo = document.createElement('video');
+        const randomThumbnailTime = Math.floor(Math.random() * 4) + 1; 
         
-        const videoEl = document.createElement('video');
-        videoEl.crossOrigin = "anonymous";
-        videoEl.preload = 'metadata';
-        videoEl.src = videoData.src;
-        videoEl.onloadedmetadata = () => { videoEl.currentTime = 1; };
-        videoEl.onseeked = () => {
-            try {
-                const canvas = document.createElement('canvas');
-                canvas.width = videoEl.videoWidth;
-                canvas.height = videoEl.videoHeight;
-                canvas.getContext('2d').drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-                thumbnail.src = canvas.toDataURL('image/jpeg');
-            } catch (e) { thumbnail.onerror(); }
-        };
-        videoEl.onerror = thumbnail.onerror = () => {
-             thumbnail.src = `https://placehold.co/400x225/1A1A1D/A0A0A0?text=Error`;
-        };
+        thumbnailVideo.src = videoData.src + '#t=' + randomThumbnailTime;
+        thumbnailVideo.muted = true;
+        thumbnailVideo.playsInline = true;
+        thumbnailVideo.preload = 'metadata';
+        thumbnailVideo.className = 'w-full h-48 object-cover transition-opacity duration-500 opacity-0';
+        thumbnailVideo.style.pointerEvents = 'none'; 
+
+        thumbnailVideo.addEventListener('loadedmetadata', () => {
+            spinnerContainer.style.display = 'none'; 
+            thumbnailVideo.classList.remove('opacity-0');
+        });
+
+        thumbnailVideo.addEventListener('error', (e) => {
+            spinnerContainer.innerHTML = `<span class="text-xs text-red-400 text-center p-2">فشل تحميل الفيديو</span>`;
+            console.error('Failed to load video metadata for thumbnail:', videoData.src, e);
+        });
 
         const overlay = document.createElement('div');
         overlay.className = 'absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent';
@@ -394,7 +500,7 @@
         playIcon.innerHTML = `<div class="bg-black/50 rounded-full p-3 backdrop-blur-sm"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></div>`;
 
         infoContainer.appendChild(title);
-        card.append(thumbnail, overlay, infoContainer, playIcon);
+        card.append(spinnerContainer, thumbnailVideo, overlay, infoContainer, playIcon);
         return card;
     }
 
@@ -421,6 +527,8 @@
         videoPopup.classList.remove('invisible', 'opacity-0');
         videoPopupContent.classList.remove('popup-enter-from');
         
+        videoPopup.scrollTop = 0;
+
         video.playbackRate = currentSpeed;
         applyFilters(video);
         video.loop = loopButton.classList.contains('bg-[var(--accent)]');
@@ -474,7 +582,18 @@
                 await navigator.clipboard.writeText(video.currentSrc);
                 showNotification('تم نسخ رابط الفيديو!', false);
             } catch (err) {
-                showNotification('فشل نسخ الرابط.');
+                try {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = video.currentSrc;
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    showNotification('تم نسخ رابط الفيديو!', false);
+                } catch (fallbackErr) {
+                    showNotification('فشل نسخ الرابط.');
+                }
             }
         }
     }
@@ -530,18 +649,24 @@
                 </div>
                 <input type="range" id="${filter.id}" min="${filter.min}" max="${filter.max}" value="${filter.value}" class="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[var(--accent)]">
             `;
-            fragment.prepend(container);
+            fragment.append(container); 
         });
         
-        filterOptionsContainer.prepend(fragment);
+        if (filterSlidersContainer) {
+            filterSlidersContainer.innerHTML = ''; 
+            filterSlidersContainer.append(fragment);
+        }
 
         filters.forEach(filter => {
-            getEl(filter.id).addEventListener('input', (e) => {
-                const video = getEl('videoPlayer');
-                filterSettings[filter.id] = e.target.value;
-                getEl(`${filter.id}-value`).textContent = `${e.target.value}${filter.unit}`;
-                if(video) applyFilters(video);
-            });
+            const slider = getEl(filter.id);
+            if (slider) {
+                slider.addEventListener('input', (e) => {
+                    const video = getEl('videoPlayer');
+                    filterSettings[filter.id] = e.target.value;
+                    getEl(`${filter.id}-value`).textContent = `${e.target.value}${filter.unit}`;
+                    if(video) applyFilters(video);
+                });
+            }
         });
     }
 
@@ -554,7 +679,10 @@
             if (slider) {
                 slider.value = value;
                 const unit = key === 'hue-rotate' ? 'deg' : key === 'blur' ? 'px' : '%';
-                getEl(`${key}-value`).textContent = `${value}${unit}`;
+                const valueEl = getEl(`${key}-value`);
+                if(valueEl) {
+                    valueEl.textContent = `${value}${unit}`;
+                }
             }
         });
     }
@@ -571,13 +699,28 @@
 
     document.addEventListener('keydown', (e) => {
         const video = getEl('videoPlayer');
-        if (e.key === 'Escape') closePopup();
+        if (e.key === 'Escape') {
+             closePopup();
+        }
+        
         if (!['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-            if (video) {
-                e.preventDefault();
+            if (video && videoPopup.classList.contains('opacity-0') === false) { 
+                if ([' ', 'f', 'm', 'arrowright', 'arrowleft'].includes(e.key.toLowerCase())) {
+                    e.preventDefault();
+                }
+
                 switch(e.key.toLowerCase()) {
                     case ' ': video.paused ? video.play() : video.pause(); break;
-                    case 'f': document.fullscreenElement ? document.exitFullscreen() : videoPopupContent.requestFullscreen(); break;
+                    case 'f': 
+                        if (document.fullscreenElement) {
+                            document.exitFullscreen();
+                        } else {
+                            videoPopupContent.requestFullscreen().catch(err => {
+                                console.error("Error attempting to enable full-screen mode:", err.message, err.name);
+                                video.requestFullscreen();
+                            });
+                        }
+                        break;
                     case 'm': video.muted = !video.muted; break;
                     case 'arrowright': video.currentTime += 5; break;
                     case 'arrowleft': video.currentTime -= 5; break;
@@ -601,3 +744,4 @@
     </script>
 </body>
 </html>
+
